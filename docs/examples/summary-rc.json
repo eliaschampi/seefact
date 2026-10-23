@@ -1,0 +1,51 @@
+{
+    "type": "RC",
+    "number": 1,
+    "reference_date": "2026-10-22",
+    "issue_date": "2026-10-22",
+    "currency": "PEN",
+    "issuer": {
+        "ruc": "20000000001",
+        "legal_name": "COMERCIAL DEMO S.A.C."
+    },
+    "lines": [
+        {
+            "type": "03",
+            "id": "B001-1",
+            "customer": {
+                "doc_type": "1",
+                "doc_number": "45678912"
+            },
+            "status": "1",
+            "totals": {
+                "taxable": "111.02",
+                "exempt": "37.50",
+                "unaffected": "150.00",
+                "igv": "19.98",
+                "total": "318.50"
+            },
+            "igv_percent": "18"
+        },
+        {
+            "type": "07",
+            "id": "BC01-1",
+            "customer": {
+                "doc_type": "1",
+                "doc_number": "45678912"
+            },
+            "status": "1",
+            "reference": {
+                "type": "03",
+                "id": "B001-1"
+            },
+            "totals": {
+                "taxable": "50.00",
+                "exempt": "0.00",
+                "unaffected": "0.00",
+                "igv": "9.00",
+                "total": "59.00"
+            },
+            "igv_percent": "18"
+        }
+    ]
+}

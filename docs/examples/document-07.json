@@ -1,0 +1,55 @@
+{
+    "type": "07",
+    "series": "FC01",
+    "number": 1,
+    "issued_at": "2026-10-23T09:00:00-05:00",
+    "currency": "PEN",
+    "issuer": {
+        "ruc": "20000000001",
+        "legal_name": "COMERCIAL DEMO S.A.C.",
+        "address": {
+            "establishment_code": "0000",
+            "ubigeo": "080108",
+            "department": "CUSCO",
+            "province": "CUSCO",
+            "district": "WANCHAQ",
+            "line": "AV. TACNA 118"
+        }
+    },
+    "customer": {
+        "doc_type": "6",
+        "doc_number": "20512333797",
+        "name": "CLIENTE EMPRESA S.A.C."
+    },
+    "reference": {
+        "type": "01",
+        "series": "F001",
+        "number": 1,
+        "reason_code": "07",
+        "reason": "Devolución del cable USB-C por falla de fábrica"
+    },
+    "lines": [
+        {
+            "code": "ESS-USBC-1M",
+            "description": "Cable USB-C Essager 1 m",
+            "unit_code": "NIU",
+            "quantity": "1",
+            "unit_value": "21.186441",
+            "unit_price": "25.00",
+            "sale_value": "21.19",
+            "tax_affectation": "10",
+            "igv_base": "21.19",
+            "igv_percent": "18",
+            "igv": "3.81"
+        }
+    ],
+    "totals": {
+        "taxable": "21.19",
+        "exempt": "0.00",
+        "unaffected": "0.00",
+        "igv": "3.81",
+        "sale_value": "21.19",
+        "total": "25.00"
+    },
+    "legends": [{ "code": "1000", "value": "SON VEINTICINCO CON 00/100 SOLES" }]
+}

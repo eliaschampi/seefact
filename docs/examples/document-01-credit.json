@@ -1,0 +1,69 @@
+{
+    "type": "01",
+    "series": "F001",
+    "number": 2,
+    "issued_at": "2026-10-22T16:40:05-05:00",
+    "due_date": "2026-12-21",
+    "currency": "PEN",
+    "operation_type": "0101",
+    "issuer": {
+        "ruc": "20000000001",
+        "legal_name": "COMERCIAL DEMO S.A.C.",
+        "address": {
+            "establishment_code": "0000",
+            "ubigeo": "080108",
+            "department": "CUSCO",
+            "province": "CUSCO",
+            "district": "WANCHAQ",
+            "line": "AV. TACNA 118"
+        }
+    },
+    "customer": {
+        "doc_type": "6",
+        "doc_number": "20512333797",
+        "name": "CLIENTE EMPRESA S.A.C."
+    },
+    "payment": {
+        "method": "credit",
+        "installments": [
+            { "amount": "1815.00", "due_date": "2026-11-21" },
+            { "amount": "1815.00", "due_date": "2026-12-21" }
+        ]
+    },
+    "lines": [
+        {
+            "code": "LEN-E14",
+            "sunat_code": "43211503",
+            "description": "Laptop Lenovo ThinkPad E14",
+            "unit_code": "NIU",
+            "quantity": "1",
+            "unit_value": "3000",
+            "unit_price": "3540.00",
+            "sale_value": "3000.00",
+            "tax_affectation": "10",
+            "igv_base": "3000.00",
+            "igv_percent": "18",
+            "igv": "540.00"
+        },
+        {
+            "description": "Libro: Manual de redes",
+            "unit_code": "NIU",
+            "quantity": "2",
+            "unit_value": "45.00",
+            "unit_price": "45.00",
+            "sale_value": "90.00",
+            "tax_affectation": "20",
+            "igv_base": "90.00",
+            "igv_percent": "0",
+            "igv": "0.00"
+        }
+    ],
+    "totals": {
+        "taxable": "3000.00",
+        "exempt": "90.00",
+        "unaffected": "0.00",
+        "igv": "540.00",
+        "sale_value": "3090.00",
+        "total": "3630.00"
+    }
+}

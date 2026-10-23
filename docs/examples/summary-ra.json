@@ -1,0 +1,10 @@
+{
+    "type": "RA",
+    "number": 1,
+    "reference_date": "2026-10-22",
+    "issue_date": "2026-10-23",
+    "issuer": { "ruc": "20000000001", "legal_name": "COMERCIAL DEMO S.A.C." },
+    "lines": [
+        { "type": "01", "series": "F001", "number": 2, "reason": "ERROR EN LA DESCRIPCIÓN DEL PRODUCTO" }
+    ]
+}

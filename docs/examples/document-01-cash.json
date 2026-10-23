@@ -1,0 +1,66 @@
+{
+    "type": "01",
+    "series": "F001",
+    "number": 1,
+    "issued_at": "2026-10-22T10:15:00-05:00",
+    "currency": "PEN",
+    "operation_type": "0101",
+    "issuer": {
+        "ruc": "20000000001",
+        "legal_name": "COMERCIAL DEMO S.A.C.",
+        "trade_name": "DEMO STORE",
+        "address": {
+            "establishment_code": "0000",
+            "ubigeo": "080108",
+            "department": "CUSCO",
+            "province": "CUSCO",
+            "district": "WANCHAQ",
+            "urbanization": "-",
+            "line": "AV. TACNA 118"
+        }
+    },
+    "customer": {
+        "doc_type": "6",
+        "doc_number": "20512333797",
+        "name": "CLIENTE EMPRESA S.A.C.",
+        "address": "JR. LIMA 450, CUSCO"
+    },
+    "payment": { "method": "cash" },
+    "lines": [
+        {
+            "code": "KZ-EDX-AZ-MIC",
+            "description": "Audífonos KZ EDX Pro X · Azul · Con micrófono",
+            "unit_code": "NIU",
+            "quantity": "2",
+            "unit_value": "76.186441",
+            "unit_price": "89.90",
+            "sale_value": "152.37",
+            "tax_affectation": "10",
+            "igv_base": "152.37",
+            "igv_percent": "18",
+            "igv": "27.43"
+        },
+        {
+            "code": "ESS-USBC-1M",
+            "description": "Cable USB-C Essager 1 m",
+            "unit_code": "NIU",
+            "quantity": "1",
+            "unit_value": "21.186441",
+            "unit_price": "25.00",
+            "sale_value": "21.19",
+            "tax_affectation": "10",
+            "igv_base": "21.19",
+            "igv_percent": "18",
+            "igv": "3.81"
+        }
+    ],
+    "totals": {
+        "taxable": "173.56",
+        "exempt": "0.00",
+        "unaffected": "0.00",
+        "igv": "31.24",
+        "sale_value": "173.56",
+        "total": "204.80"
+    },
+    "legends": [{ "code": "1000", "value": "SON DOSCIENTOS CUATRO CON 80/100 SOLES" }]
+}

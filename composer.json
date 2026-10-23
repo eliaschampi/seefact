@@ -1,0 +1,54 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "eliaschampi/see-php",
+    "type": "project",
+    "description": "Stateless SUNAT SEE engine: builds, signs and transports CPE for a trusted core. No database, no state.",
+    "keywords": ["sunat", "cpe", "see", "ubl", "greenter"],
+    "license": "proprietary",
+    "require": {
+        "php": "^8.5",
+        "ext-dom": "*",
+        "ext-libxml": "*",
+        "ext-openssl": "*",
+        "ext-soap": "*",
+        "ext-zlib": "*",
+        "brick/math": "^0.18",
+        "greenter/lite": "^5.3"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.30",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^12.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "See\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "See\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php -S 127.0.0.1:8090 public/index.php"
+        ],
+        "test": "@php vendor/bin/phpunit",
+        "analyse": "@php vendor/bin/phpstan analyse --no-progress --memory-limit=512M",
+        "format": "@php vendor/bin/pint",
+        "check": [
+            "@php vendor/bin/pint --test",
+            "@analyse",
+            "@test"
+        ]
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

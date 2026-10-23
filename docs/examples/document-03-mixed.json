@@ -1,0 +1,85 @@
+{
+    "type": "03",
+    "series": "B001",
+    "number": 1,
+    "issued_at": "2026-10-22T19:05:44-05:00",
+    "currency": "PEN",
+    "operation_type": "0101",
+    "issuer": {
+        "ruc": "20000000001",
+        "legal_name": "COMERCIAL DEMO S.A.C.",
+        "address": {
+            "establishment_code": "0001",
+            "ubigeo": "080108",
+            "department": "CUSCO",
+            "province": "CUSCO",
+            "district": "WANCHAQ",
+            "urbanization": "URB. MAGISTERIO & LOS PINOS",
+            "line": "CALLE LOS ÁLAMOS 12 <INT. 3>"
+        }
+    },
+    "customer": {
+        "doc_type": "1",
+        "doc_number": "45678912",
+        "name": "MARÍA PÉREZ & HIJOS"
+    },
+    "lines": [
+        {
+            "description": "Mouse inalámbrico",
+            "unit_code": "NIU",
+            "quantity": "1",
+            "unit_value": "50",
+            "unit_price": "59.00",
+            "sale_value": "50.00",
+            "tax_affectation": "10",
+            "igv_base": "50.00",
+            "igv_percent": "18",
+            "igv": "9.00"
+        },
+        {
+            "description": "Café orgánico tostado\nLote 2026-10",
+            "unit_code": "KGM",
+            "quantity": "1.5",
+            "unit_value": "40.677966",
+            "unit_price": "48.00",
+            "sale_value": "61.02",
+            "tax_affectation": "10",
+            "igv_base": "61.02",
+            "igv_percent": "18",
+            "igv": "10.98"
+        },
+        {
+            "description": "Libro escolar",
+            "unit_code": "NIU",
+            "quantity": "3",
+            "unit_value": "12.50",
+            "unit_price": "12.50",
+            "sale_value": "37.50",
+            "tax_affectation": "20",
+            "igv_base": "37.50",
+            "igv_percent": "0",
+            "igv": "0.00"
+        },
+        {
+            "description": "Pensión de enseñanza octubre",
+            "unit_code": "ZZ",
+            "quantity": "1",
+            "unit_value": "150.00",
+            "unit_price": "150.00",
+            "sale_value": "150.00",
+            "tax_affectation": "30",
+            "igv_base": "150.00",
+            "igv_percent": "0",
+            "igv": "0.00"
+        }
+    ],
+    "totals": {
+        "taxable": "111.02",
+        "exempt": "37.50",
+        "unaffected": "150.00",
+        "igv": "19.98",
+        "sale_value": "298.52",
+        "total": "318.50"
+    },
+    "legends": [{ "code": "1000", "value": "SON TRESCIENTOS DIECIOCHO CON 50/100 SOLES" }]
+}
