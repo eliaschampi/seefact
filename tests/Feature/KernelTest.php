@@ -154,6 +154,38 @@ final class KernelTest extends TestCase
         self::assertStringNotContainsString('CLIENTE EMPRESA', $everything);
     }
 
+    public function test_a_pfx_is_imported_once_into_the_pem_that_signs(): void
+    {
+        $logs = [];
+        $kernel = self::kernel(logs: $logs);
+        $imported = $kernel->handle(self::post('/v1/certificates/import', [
+            'pkcs12_base64' => base64_encode(self::pfx('test-only-certificate-legacy.pfx')),
+            'password' => self::PFX_PASSWORD,
+        ]));
+
+        self::assertSame(200, $imported->status, $imported->json());
+        self::assertSame(['certificate', 'subject', 'not_after', 'sha256'], array_keys($imported->body));
+        self::assertSame('2046-10-17T08:19:41-05:00', $imported->body['not_after']);
+        self::assertMatchesRegularExpression('/^[0-9a-f]{64}$/', (string) $imported->body['sha256']);
+
+        $signed = $kernel->handle(self::post('/v1/documents/sign', [
+            'certificate' => $imported->body['certificate'],
+            'document' => self::example('document-01-cash'),
+        ]));
+        self::assertSame(200, $signed->status, $signed->json());
+
+        $wrong = $kernel->handle(self::post('/v1/certificates/import', [
+            'pkcs12_base64' => base64_encode(self::pfx('test-only-certificate.pfx')),
+            'password' => 'otra clave',
+        ]));
+        self::assertSame(422, $wrong->status);
+        self::assertSame(['code' => 'pkcs12_password', 'message' => 'La contraseña del certificado no es correcta.', 'pointer' => '/password'], self::errorOf($wrong->body));
+
+        $everything = implode("\n", $logs);
+        self::assertStringNotContainsString(self::PFX_PASSWORD, $everything);
+        self::assertStringNotContainsString('PRIVATE KEY', $everything);
+    }
+
     public function test_unexpected_failures_are_a_generic_500_with_a_logged_cause(): void
     {
         $logs = [];

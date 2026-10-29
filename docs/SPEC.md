@@ -15,8 +15,8 @@ transporta a SUNAT. Consulta tickets y CDR. Tiene un solo llamador de
 confianza: el core (Rust), por socket local.
 
 **Es:** mapper `cpe.v1`/`summary.v1` → Greenter, firma XMLDSig, SOAP
-`billService`/`billConsultService`, lectura de CDR y clasificación honesta
-de cada respuesta.
+`billService`/`billConsultService`, lectura de CDR, clasificación honesta
+de cada respuesta y la conversión única de un `.pfx` al PEM con que firma.
 
 **No es:** dueño de correlativos, estados, reintentos, colas,
 almacenamiento, credenciales persistidas, IGV, PDF, tenants ni API
@@ -27,6 +27,7 @@ pública. Todo eso vive en el core.
 | core (Rust)                                                  | see-php                                                   |
 | ------------------------------------------------------------ | --------------------------------------------------------- |
 | tenants, emisores, credenciales cifradas                     | recibe certificado y Clave SOL por request; no guarda     |
+| sella el PEM que recibe al importar el `.pfx`                | abre el `.pfx` una vez y devuelve el PEM; no guarda       |
 | `TaxMath`: único dueño del IGV y del redondeo                | verifica que cada total sea la suma exacta de sus líneas  |
 | correlativo (`FOR UPDATE`), máquina CPE, idempotencia        | —                                                         |
 | persistir XML firmado + sha256 (write-once), CDR, tickets    | devuelve bytes finales y su sha256                        |

@@ -6,6 +6,7 @@ namespace See;
 
 use Closure;
 use DateTimeImmutable;
+use DateTimeZone;
 use See\Cpe\Certificate;
 use See\Cpe\DocumentMapper;
 use See\Cpe\Parties;
@@ -23,7 +24,7 @@ use SensitiveParameter;
 use Throwable;
 
 /**
- * HTTP surface of the engine: one trusted caller (the core), seven routes,
+ * HTTP surface of the engine: one trusted caller (the core), eight routes,
  * JSON in and out. Contract: docs/CONTRACT.md.
  *
  * The HTTP status describes this service's own work. SUNAT's verdict travels
@@ -41,6 +42,7 @@ final class Kernel
         '/v1/summaries/send' => 'POST',
         '/v1/tickets/status' => 'POST',
         '/v1/cdr/status' => 'POST',
+        '/v1/certificates/import' => 'POST',
     ];
 
     private const int MIN_TOKEN_LENGTH = 32;
@@ -153,6 +155,7 @@ final class Kernel
             '/v1/summaries/sign' => $this->signSummary($input),
             '/v1/summaries/send' => $this->sendSummary($input),
             '/v1/tickets/status' => $this->ticketStatus($input),
+            '/v1/certificates/import' => $this->importCertificate($input),
             default => $this->cdrStatus($input),
         });
     }
@@ -173,6 +176,31 @@ final class Kernel
         $mapped = SummaryMapper::map($input->object('summary'));
 
         return $this->signer->sign($mapped, $this->certificate($input))->toArray();
+    }
+
+    /**
+     * A .pfx/.p12 and its password → the passwordless PEM the core seals and
+     * sends back with each signature, plus what it shows without opening it.
+     *
+     * @return array<string, string>
+     */
+    private function importCertificate(Input $input): array
+    {
+        $input->only('pkcs12_base64', 'password');
+        $certificate = Certificate::fromPkcs12(
+            $input->base64('pkcs12_base64', 65_536),
+            $input->secret('password', 1_024),
+            ($this->clock)(),
+            $input->pointer('pkcs12_base64'),
+            $input->pointer('password'),
+        );
+
+        return [
+            'certificate' => $certificate->pem,
+            'subject' => $certificate->subject,
+            'not_after' => $certificate->validTo->setTimezone(new DateTimeZone(Input::LIMA))->format(DATE_RFC3339),
+            'sha256' => $certificate->sha256,
+        ];
     }
 
     /** @return array<string, mixed> */

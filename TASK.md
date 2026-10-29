@@ -28,7 +28,7 @@ RA y consulta de CDR.
 
 | Item                    | Por qué / cuándo                                                                                         |
 | ----------------------- | -------------------------------------------------------------------------------------------------------- |
-| `.pfx` → PEM            | Onboarding (Fase 3). OpenSSL 3 rechaza los `.pfx` RC2-40 heredados sin el provider `legacy`: validar con un certificado real de CA peruana. |
+| ~~`.pfx` → PEM~~        | Hecho 2026-10-29: `/v1/certificates/import`, `deploy/openssl.cnf` (provider `legacy`), probado con un `.pfx` moderno y uno RC2-40 hechos del certificado de prueba. Falta abrir uno real de una CA peruana (con el primer emisor). |
 | Endpoint por emisor     | OSE para PRICOS ≥ 300 UIT (v1.x): `target{ose_url}` validado.                                            |
 | GRE remitente `09`      | Fase 6: REST + OAuth; el token lo guarda el core y viaja por request.                                    |
 | Smoke de producción     | Fase 3: con emisor de tercera categoría real, fuera de CI.                                               |

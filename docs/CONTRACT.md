@@ -25,6 +25,7 @@ JSON sobre HTTP, sólo desde el core, por socket local. Leyes del contrato:
 | `POST /v1/summaries/send`  | XML firmado → `sendSummary` → ticket              |
 | `POST /v1/tickets/status`  | `getStatus(ticket)`                               |
 | `POST /v1/cdr/status`      | `getStatusCdr` (sólo producción)                  |
+| `POST /v1/certificates/import` | `.pfx`/`.p12` + contraseña → PEM sin contraseña |
 
 ## 2. Firmar
 
@@ -109,6 +110,33 @@ el documento es coherente y que el XML imprime exactamente estos montos.
 - **RA:** `number`, `reference_date`, `issue_date`, `issuer` y `lines[]`
   con `type` (01/07), `series` (`F…`), `number` y `reason` (≤ 100).
 
+## 2b. Importar un certificado
+
+```json
+{ "pkcs12_base64": "…", "password": "…" }
+```
+
+El `.pfx`/`.p12` tal como lo entrega la entidad certificadora (≤ 64 KiB) y su
+contraseña. Se abre una sola vez: el core sella el PEM que devuelve y lo
+manda en cada `/sign`. Pasa las mismas comprobaciones que un `certificate`
+de `/sign` (RSA, clave ↔ certificado, vigencia).
+
+Respuesta 200:
+
+```json
+{
+    "certificate": "-----BEGIN PRIVATE KEY-----…-----END CERTIFICATE-----",
+    "subject": "/C=PE/O=…/CN=…",
+    "not_after": "2046-10-17T08:19:41-05:00",
+    "sha256": "…"
+}
+```
+
+`subject` es el titular tal como lo imprime OpenSSL; `sha256`, la huella del
+certificado en hex. Los `.pfx` protegidos con RC2-40 necesitan el provider
+`legacy` de OpenSSL (`deploy/openssl.cnf`); si el servidor no lo tiene, la
+respuesta es 500 y la causa va al log (`bin/see diagnose` lo avisa antes).
+
 ## 3. Enviar y consultar
 
 ```json
@@ -153,7 +181,7 @@ Qué hace el core con cada uno: [`SPEC.md`](SPEC.md) §4.
 | 405  | `method_not_allowed`                                                                                                        |
 | 413  | `payload_too_large`                                                                                                         |
 | 415  | `unsupported_media_type`                                                                                                    |
-| 422  | `inconsistent_amounts`, `invoice_requires_ruc`, `invalid_due_date`, `invalid_summary_date`, `certificate_invalid`, `certificate_key_mismatch`, `certificate_expired`, `certificate_not_yet_valid`, `xml_invalid`, `xml_unsupported`, `xml_not_signed`, `xml_signature_invalid`, `sol_ruc_mismatch`, `consult_not_available` |
+| 422  | `pkcs12_invalid`, `pkcs12_password`, `inconsistent_amounts`, `invoice_requires_ruc`, `invalid_due_date`, `invalid_summary_date`, `certificate_invalid`, `certificate_key_mismatch`, `certificate_expired`, `certificate_not_yet_valid`, `xml_invalid`, `xml_unsupported`, `xml_not_signed`, `xml_signature_invalid`, `sol_ruc_mismatch`, `consult_not_available` |
 | 500  | `internal_error` (causa sólo en el log)                                                                                     |
 | 503  | `not_configured`                                                                                                            |
 

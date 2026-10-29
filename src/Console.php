@@ -63,11 +63,12 @@ final class Console
         self::row('Token', is_string($token) && strlen($token) >= 32 ? 'configurado' : 'AUSENTE: SEE_API_TOKEN, mínimo 32 caracteres');
         self::row('Twig cache', $cacheDirectory === '' ? 'desactivado' : $cacheDirectory.(is_writable(is_dir($cacheDirectory) ? $cacheDirectory : dirname($cacheDirectory)) ? ' (escribible)' : ' (NO escribible)'));
         self::row('CA TLS', $ca);
+        self::row('PFX legacy', Certificate::legacyProviderActive() ? 'activo (.pfx RC2-40)' : 'INACTIVO: OPENSSL_CONF=deploy/openssl.cnf; los .pfx RC2-40 no se leen');
         self::row('Beta', Environment::Beta->billService());
         self::row('Producción', Environment::Production->billService());
         self::row('Consulta CDR', (string) Environment::Production->consultService());
 
-        return $missing === [] ? 0 : 1;
+        return $missing === [] && Certificate::legacyProviderActive() ? 0 : 1;
     }
 
     /**

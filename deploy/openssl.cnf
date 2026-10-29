@@ -1,0 +1,21 @@
+# OpenSSL for see-php: the default provider plus "legacy", so that .pfx files
+# protected with RC2-40 (still issued by some certification authorities) can
+# be opened. Nothing else changes: TLS and signing keep the default provider.
+#
+# OpenSSL reads this file when PHP starts, not per request: set
+# OPENSSL_CONF=<this file> in the PHP-FPM master's environment
+# (deploy/php-fpm-openssl.conf) and before `composer test`.
+openssl_conf = openssl_init
+
+[openssl_init]
+providers = provider_sect
+
+[provider_sect]
+default = default_sect
+legacy = legacy_sect
+
+[default_sect]
+activate = 1
+
+[legacy_sect]
+activate = 1

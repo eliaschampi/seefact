@@ -35,7 +35,10 @@
             "Composer\\Config::disableProcessTimeout",
             "@php -S 127.0.0.1:8090 public/index.php"
         ],
-        "test": "@php vendor/bin/phpunit",
+        "test": [
+            "@putenv OPENSSL_CONF=deploy/openssl.cnf",
+            "@php vendor/bin/phpunit"
+        ],
         "analyse": "@php vendor/bin/phpstan analyse --no-progress --memory-limit=512M",
         "format": "@php vendor/bin/pint",
         "check": [

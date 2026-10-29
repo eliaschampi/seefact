@@ -39,6 +39,18 @@ abstract class TestCase extends BaseTestCase
         return $data;
     }
 
+    /** The password of tests/Fixtures/test-only-certificate{,-legacy}.pfx. */
+    protected const string PFX_PASSWORD = 'clave de prueba';
+
+    /** The fixture certificate as a .pfx: modern (AES) or legacy (RC2-40). */
+    protected static function pfx(string $file): string
+    {
+        $pfx = file_get_contents(__DIR__.'/Fixtures/'.$file);
+        self::assertIsString($pfx);
+
+        return $pfx;
+    }
+
     protected static function certificatePem(): string
     {
         $pem = file_get_contents(__DIR__.'/Fixtures/test-only-certificate.pem');

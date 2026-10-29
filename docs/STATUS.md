@@ -8,8 +8,9 @@ Sólo hechos que demuestran el código, los tests o la red. Ley:
 ## Checks
 
 `composer check` en verde: Pint, PHPStan nivel `max` (0 errores, incluidos
-`bin/see` y `public/index.php`), PHPUnit con 68 tests / 404 aserciones, con
-`failOnWarning` y `failOnDeprecation` activos para el código propio.
+`bin/see` y `public/index.php`), PHPUnit con 71 tests / 435 aserciones, con
+`failOnWarning` y `failOnDeprecation` activos para el código propio
+(2026-10-29, PHP 8.5.11 con OpenSSL 4.0.3).
 
 ## SUNAT beta, con red real (2026-10-22)
 
@@ -48,11 +49,12 @@ responde 401; con un campo faltante, 400 con su JSON Pointer.
 | Envío        | XML bien formado, de la ruta, firmado y **verificado**; nombre derivado del XML; RUC SOL = emisor                            |
 | Transporte   | WSDL locales de Greenter; TLS verificado; WS-Security escapado; timeouts de conexión y lectura                               |
 | Respuestas   | `cdr` · `ticket` · `status` · `consult` · `fault` (sólo código de 4 dígitos) · `transport_error` · `invalid_response` con evidencia |
+| Certificado  | `.pfx` moderno (AES) y heredado (RC2-40) → el mismo PEM; contraseña errada → `pkcs12_password`; sin el provider `legacy`, un RC2-40 falla ("unsupported") y `bin/see diagnose` lo marca INACTIVO; con `deploy/openssl.cnf`, se abre. El PEM importado firma |
 | Operación    | log JSON por request (sin cuerpos ni secretos, probado), `X-Request-Id`, `bin/see diagnose`                                  |
 
 ## No implementado
 
-`.pfx` → PEM, endpoint OSE por emisor, GRE `09`, consulta de CDR contra
+Endpoint OSE por emisor, GRE `09`, consulta de CDR contra
 producción real (probada sólo con dobles; beta no la ofrece), despliegue en
 Debian (las plantillas de `deploy/` no se han ejecutado) y smoke con un
 emisor de tercera categoría. Orden: `TASK.md`.
