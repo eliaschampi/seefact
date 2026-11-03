@@ -51,6 +51,13 @@ final class SummaryMapperTest extends TestCase
         });
     }
 
+    public function test_the_optional_buyer_name_is_bounded_and_cannot_inject_xml(): void
+    {
+        foreach ([str_repeat('A', 251), 'Nombre]]><cbc:Note>x</cbc:Note>'] as $name) {
+            self::assertError('/lines/0/customer/name', self::example('summary-rc'), static fn (array &$s) => $s['lines'][0]['customer']['name'] = $name);
+        }
+    }
+
     public function test_a_summary_cannot_predate_its_documents(): void
     {
         self::assertError('/issue_date', self::example('summary-rc'), static fn (array &$s) => $s['issue_date'] = '2026-10-21');

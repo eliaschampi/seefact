@@ -173,6 +173,15 @@ contrastar estos rangos con la guía SUNAT vigente.
 IGV (`cbc:Percent`), aunque la boleta no tenga operaciones gravadas. Por eso
 `igv_percent` es obligatorio en `summary.v1`.
 
+**RC vigente desde agosto de 2026.** La [RS 000048-2026/SUNAT,
+anexos VII y X](https://www.sunat.gob.pe/legislacion/superin/2026/anexo-000048-2026.pdf)
+añade el nombre del adquirente cuando exista en la boleta (campo 9-A,
+`cac:AccountingCustomerParty/cac:Party/cac:PartyLegalEntity/cbc:RegistrationName`,
+hasta 250 caracteres). `summary.v1` lo recibe en `customer.name`; no se
+infiere de su tipo de documento. Greenter 5.3 carece de ese campo:
+`SummaryMapper` completa su DOM antes de firmarlo, sin modificar el XML ya
+firmado ni duplicar la plantilla.
+
 **Plazos (los configura el core, no son constantes).** Factura: 3 días
 (R.S. 000003-2023/SUNAT). RC: hasta el 7.º día (RS 000048-2026/SUNAT).
 Contrastar antes de producción.

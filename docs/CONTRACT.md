@@ -103,10 +103,14 @@ el documento es coherente y que el XML imprime exactamente estos montos.
 - **RC:** `number` (1…99 999 por día), `reference_date` (emisión de las
   boletas), `issue_date` (generación, ≥ `reference_date`), `currency`,
   `issuer{ruc, legal_name}` y `lines[]` (1…500). Cada línea lleva `type`
-  (03/07), `id` (`B001-25`), `customer{doc_type, doc_number}`, `status`
+  (03/07), `id` (`B001-25`), `customer{doc_type, doc_number, name?}`, `status`
   (1 adicionar · 2 modificar · 3 anular), `reference{type: "03", id}` (sólo
   si es 07), `totals{taxable, exempt, unaffected, igv, total}` e
   `igv_percent` (obligatorio, regla SUNAT 2992).
+  `customer.name` (hasta 250 caracteres) lleva el nombre que figure en la
+  boleta o nota original, también con tipo `0` si lo tiene. Es opcional
+  para documentos que no lo traen: la RS 000048-2026/SUNAT, anexos VII
+  (campo 9-A) y X, exige informarlo cuando exista en la BVE.
 - **RA:** `number`, `reference_date`, `issue_date`, `issuer` y `lines[]`
   con `type` (01/07), `series` (`F…`), `number` y `reason` (≤ 100).
 

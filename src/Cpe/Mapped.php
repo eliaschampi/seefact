@@ -19,11 +19,13 @@ final readonly class Mapped
     /**
      * @param  array<string, BigDecimal>  $amounts  XPath → exact amount
      * @param  array<string, int>  $counts  XPath → exact node count
+     * @param  array<int, string>  $summaryCustomerNames  RC line position → buyer name (Greenter 5.3 has no field)
      */
     public function __construct(
         public DocumentInterface $model,
         public string $filename,
         public array $amounts,
         public array $counts,
+        public array $summaryCustomerNames = [],
     ) {}
 }

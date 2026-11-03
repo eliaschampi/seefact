@@ -45,6 +45,7 @@ final class Signer
     {
         $document = Xml::load($this->render($mapped))
             ?? throw new LogicException('Greenter generó un XML mal formado.');
+        SummaryMapper::addCustomerNames($document, $mapped->summaryCustomerNames);
 
         $signer = new SignedXml;
         $signer->setCertificate($certificate->pem);

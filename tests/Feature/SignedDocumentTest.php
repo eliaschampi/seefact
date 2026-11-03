@@ -92,4 +92,26 @@ final class SignedDocumentTest extends TestCase
 
         self::assertSame($before, ini_get('precision'));
     }
+
+    public function test_the_summary_names_each_buyer_when_the_source_named_it(): void
+    {
+        $summary = self::example('summary-rc');
+        $summary['lines'][0]['customer']['name'] = 'CLIENTES VARIOS';
+        $summary['lines'][0]['customer']['doc_type'] = '0';
+        $summary['lines'][0]['customer']['doc_number'] = '00000000';
+        unset($summary['lines'][1]['customer']['name']);
+        $response = self::kernel()->handle(self::post('/v1/summaries/sign', [
+            'certificate' => self::certificatePem(), 'summary' => $summary,
+        ]));
+        self::assertSame(200, $response->status, $response->json());
+        self::assertIsString($response->body['xml_base64']);
+        $xml = (string) base64_decode($response->body['xml_base64'], true);
+        self::assertTrue((new SignedXml)->verifyXml($xml));
+        $document = Xml::load($xml);
+        self::assertNotNull($document);
+        $xpath = Xml::xpath($document);
+        $path = '/*/sac:SummaryDocumentsLine/cac:AccountingCustomerParty/cac:Party/cac:PartyLegalEntity/cbc:RegistrationName';
+        self::assertSame('CLIENTES VARIOS', Xml::single($xpath, $path));
+        self::assertSame(1.0, $xpath->evaluate('count('.$path.')'));
+    }
 }

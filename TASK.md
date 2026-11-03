@@ -29,6 +29,7 @@ RA y consulta de CDR.
 | Item                    | Por qué / cuándo                                                                                         |
 | ----------------------- | -------------------------------------------------------------------------------------------------------- |
 | ~~`.pfx` → PEM~~        | Hecho 2026-10-29: `/v1/certificates/import`, `deploy/openssl.cnf` (provider `legacy`), probado con un `.pfx` moderno y uno RC2-40 hechos del certificado de prueba. Falta abrir uno real de una CA peruana (con el primer emisor). |
+| ~~Nombre del adquirente en RC~~ | Hecho 2026-11-02, necesario para core F10: `customer.name` → `RegistrationName` antes de firmar (RS 000048-2026, anexos VII/X); golden revisado, 73 tests / 450 aserciones. XML nuevo contra SUNAT: sin verificar. |
 | Endpoint por emisor     | OSE para PRICOS ≥ 300 UIT (v1.x): `target{ose_url}` validado.                                            |
 | GRE remitente `09`      | Fase 6: REST + OAuth; el token lo guarda el core y viaja por request.                                    |
 | Smoke de producción     | Fase 3: con emisor de tercera categoría real, fuera de CI.                                               |

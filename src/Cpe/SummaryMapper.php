@@ -6,13 +6,17 @@ namespace See\Cpe;
 
 use Brick\Math\BigDecimal;
 use DateTimeImmutable;
+use DOMDocument;
+use DOMElement;
 use Greenter\Model\Sale\Document;
 use Greenter\Model\Summary\Summary;
 use Greenter\Model\Summary\SummaryDetail;
 use Greenter\Model\Voided\Voided;
 use Greenter\Model\Voided\VoidedDetail;
+use LogicException;
 use See\Input\Input;
 use See\Input\InvalidInput;
+use See\Support\Xml;
 
 /**
  * summary.v1 → Greenter Summary (RC, resumen diario de boletas) or Voided
@@ -48,11 +52,18 @@ final class SummaryMapper
         $lines = $summary->objects('lines', 1, self::MAX_LINES);
         $amounts = [];
         $details = [];
+        $customerNames = [];
 
         foreach ($lines as $index => $line) {
             $line->only('type', 'id', 'customer', 'status', 'reference', 'totals', 'igv_percent');
             $type = $line->oneOf('type', [DocumentMapper::RECEIPT, DocumentMapper::CREDIT_NOTE]);
-            [$customerType, $customerNumber] = Parties::identity($line->object('customer')->only('doc_type', 'doc_number'));
+            $customer = $line->object('customer')->only('doc_type', 'doc_number', 'name');
+            [$customerType, $customerNumber] = Parties::identity($customer);
+            $customerName = $customer->optionalText('name', 250);
+
+            if ($customerName !== null) {
+                $customerNames[$index + 1] = $customerName;
+            }
 
             $detail = (new SummaryDetail)
                 ->setTipoDoc($type)
@@ -85,7 +96,39 @@ final class SummaryMapper
             ->setCompany(Parties::summaryIssuer($summary->object('issuer')))
             ->setDetails($details);
 
-        return new Mapped($model, $model->getName(), $amounts, ['/*/sac:SummaryDocumentsLine' => count($lines)]);
+        return new Mapped($model, $model->getName(), $amounts, ['/*/sac:SummaryDocumentsLine' => count($lines)], $customerNames);
+    }
+
+    /**
+     * RS 000048-2026 adds the buyer's name to RC. Greenter 5.3 cannot
+     * render it; complete its DOM before signing, without a second template.
+     *
+     * @param  array<int, string>  $names  one-based line position → name
+     */
+    public static function addCustomerNames(DOMDocument $document, array $names): void
+    {
+        if ($names === []) {
+            return;
+        }
+
+        $xpath = Xml::xpath($document);
+
+        foreach ($names as $position => $name) {
+            $customers = $xpath->query("/*/sac:SummaryDocumentsLine[{$position}]/cac:AccountingCustomerParty");
+            $customer = $customers === false ? null : $customers->item(0);
+
+            if ($customers === false || $customers->length !== 1 || ! $customer instanceof DOMElement) {
+                throw new LogicException('Greenter no generó el adquirente de la línea del resumen.');
+            }
+
+            $party = $document->createElementNS(Xml::NAMESPACES['cac'], 'cac:Party');
+            $customer->appendChild($party);
+            $legalEntity = $document->createElementNS(Xml::NAMESPACES['cac'], 'cac:PartyLegalEntity');
+            $party->appendChild($legalEntity);
+            $registration = $document->createElementNS(Xml::NAMESPACES['cbc'], 'cbc:RegistrationName');
+            $legalEntity->appendChild($registration);
+            $registration->appendChild($document->createTextNode($name));
+        }
     }
 
     private static function voided(Input $summary): Mapped

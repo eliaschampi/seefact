@@ -3,14 +3,14 @@
 Sólo hechos que demuestran el código, los tests o la red. Ley:
 [`SPEC.md`](SPEC.md). Contrato: [`CONTRACT.md`](CONTRACT.md).
 
-**Última verificación:** 2026-10-22 · PHP 8.5.11 (macOS) · Greenter 5.3.0.
+**Última verificación:** 2026-11-02 · PHP 8.5.11 (macOS) · Greenter 5.3.0.
 
 ## Checks
 
 `composer check` en verde: Pint, PHPStan nivel `max` (0 errores, incluidos
-`bin/see` y `public/index.php`), PHPUnit con 71 tests / 435 aserciones, con
+`bin/see` y `public/index.php`), PHPUnit con 73 tests / 450 aserciones, con
 `failOnWarning` y `failOnDeprecation` activos para el código propio
-(2026-10-29, PHP 8.5.11 con OpenSSL 4.0.3).
+(2026-11-02, PHP 8.5.11 con OpenSSL 4.0.3).
 
 ## SUNAT beta, con red real (2026-10-22)
 
@@ -50,6 +50,7 @@ responde 401; con un campo faltante, 400 con su JSON Pointer.
 | Transporte   | WSDL locales de Greenter; TLS verificado; WS-Security escapado; timeouts de conexión y lectura                               |
 | Respuestas   | `cdr` · `ticket` · `status` · `consult` · `fault` (sólo código de 4 dígitos) · `transport_error` · `invalid_response` con evidencia |
 | Certificado  | `.pfx` moderno (AES) y heredado (RC2-40) → el mismo PEM; contraseña errada → `pkcs12_password`; sin el provider `legacy`, un RC2-40 falla ("unsupported") y `bin/see diagnose` lo marca INACTIVO; con `deploy/openssl.cnf`, se abre. El PEM importado firma |
+| Resumen RC | `customer.name` opcional (hasta 250), exigido por el llamador cuando figure en la BVE (RS 000048-2026, anexos VII/X). El golden lleva el nombre y `&` escapado en `RegistrationName`; sólo cambiaron esos dos subárboles y XMLDSig, no los montos. Test de firma con `CLIENTES VARIOS` y una línea sin nombre; 251 caracteres y la secuencia `]]>` se rechazan en `/lines/0/customer/name`. Nuevo XML contra SUNAT beta/producción: sin verificar. |
 | Operación    | log JSON por request (sin cuerpos ni secretos, probado), `X-Request-Id`, `bin/see diagnose`                                  |
 
 ## No implementado

@@ -14,7 +14,8 @@
             "id": "B001-1",
             "customer": {
                 "doc_type": "1",
-                "doc_number": "45678912"
+                "doc_number": "45678912",
+                "name": "MARÍA PÉREZ & HIJOS"
             },
             "status": "1",
             "totals": {
@@ -31,7 +32,8 @@
             "id": "BC01-1",
             "customer": {
                 "doc_type": "1",
-                "doc_number": "45678912"
+                "doc_number": "45678912",
+                "name": "MARÍA PÉREZ & HIJOS"
             },
             "status": "1",
             "reference": {
