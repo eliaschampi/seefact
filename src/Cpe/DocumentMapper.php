@@ -184,15 +184,15 @@ final class DocumentMapper
                 ->setCodProdSunat($line->optionalCode('sunat_code', '\d{8}', 'El código de producto SUNAT tiene 8 dígitos.'))
                 ->setDescripcion($line->text('description', 500, multiline: true))
                 ->setUnidad($line->code('unit_code', '[A-Z0-9]{2,3}', 'Unidad de medida del Catálogo 03.'))
-                ->setCantidad(self::float($quantity))
-                ->setMtoValorUnitario(self::float($unitValue))
-                ->setMtoPrecioUnitario(self::float($unitPrice))
-                ->setMtoValorVenta(self::float($saleValue))
+                ->setCantidad($quantity->toFloat())
+                ->setMtoValorUnitario($unitValue->toFloat())
+                ->setMtoPrecioUnitario($unitPrice->toFloat())
+                ->setMtoValorVenta($saleValue->toFloat())
                 ->setTipAfeIgv($affectation)
-                ->setMtoBaseIgv(self::float($igvBase))
-                ->setPorcentajeIgv(self::float($igvPercent))
-                ->setIgv(self::float($igv))
-                ->setTotalImpuestos(self::float($igv));
+                ->setMtoBaseIgv($igvBase->toFloat())
+                ->setPorcentajeIgv($igvPercent->toFloat())
+                ->setIgv($igv->toFloat())
+                ->setTotalImpuestos($igv->toFloat());
 
             $this->lineAmounts[] = [
                 $quantityElement => $quantity,
@@ -232,14 +232,14 @@ final class DocumentMapper
             }
         }
 
-        $sale->setMtoOperGravadas(self::optionalFloat($lines['taxed']))
-            ->setMtoOperExoneradas(self::optionalFloat($lines['exempt']))
-            ->setMtoOperInafectas(self::optionalFloat($lines['unaffected']))
-            ->setMtoIGV(self::float($lines['igv']))
-            ->setTotalImpuestos(self::float($lines['igv']))
-            ->setMtoImpVenta(self::float($total));
-        $sale->setValorVenta(self::float($lines['sale_value']));
-        $sale->setSubTotal(self::float($total));
+        $sale->setMtoOperGravadas($lines['taxed']?->toFloat())
+            ->setMtoOperExoneradas($lines['exempt']?->toFloat())
+            ->setMtoOperInafectas($lines['unaffected']?->toFloat())
+            ->setMtoIGV($lines['igv']->toFloat())
+            ->setTotalImpuestos($lines['igv']->toFloat())
+            ->setMtoImpVenta($total->toFloat());
+        $sale->setValorVenta($lines['sale_value']->toFloat());
+        $sale->setSubTotal($total->toFloat());
 
         // Greenter's credit note template prints only PayableAmount here.
         if ($sale instanceof Invoice) {
@@ -293,7 +293,7 @@ final class DocumentMapper
             }
 
             $pending = $pending->plus($amount);
-            $installments[] = (new Cuota)->setMoneda($currency)->setMonto(self::float($amount))->setFechaPago($dueDate);
+            $installments[] = (new Cuota)->setMoneda($currency)->setMonto($amount->toFloat())->setFechaPago($dueDate);
             $this->amounts[sprintf("/*/cac:PaymentTerms[cbc:PaymentMeansID='Cuota%03d']/cbc:Amount", $index + 1)] = $amount;
         }
 
@@ -301,7 +301,7 @@ final class DocumentMapper
             throw InvalidInput::content($payment->pointer('installments'), 'inconsistent_amounts', 'Las cuotas suman más que el total del comprobante.');
         }
 
-        $invoice->setFormaPago(new FormaPagoCredito(self::float($pending), $currency))
+        $invoice->setFormaPago(new FormaPagoCredito($pending->toFloat(), $currency))
             ->setCuotas($installments);
         $this->amounts["/*/cac:PaymentTerms[cbc:PaymentMeansID='Credito']/cbc:Amount"] = $pending;
     }
@@ -334,16 +334,5 @@ final class DocumentMapper
         }
 
         return $value;
-    }
-
-    /** Exact for every value Input accepts: at most 15 significant digits. */
-    private static function float(BigDecimal $value): float
-    {
-        return (float) (string) $value;
-    }
-
-    private static function optionalFloat(?BigDecimal $value): ?float
-    {
-        return $value === null ? null : self::float($value);
     }
 }

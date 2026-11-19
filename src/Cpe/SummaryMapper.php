@@ -80,7 +80,7 @@ final class SummaryMapper
             // SUNAT rejects a line without the IGV rate (2992), even when
             // the boleta has no taxed operations.
             $percent = $line->decimal('igv_percent', 2, 3);
-            $detail->setPorcentajeIgv((float) (string) $percent);
+            $detail->setPorcentajeIgv($percent->toFloat());
             $amounts["cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory[cac:TaxScheme/cbc:ID='1000']/cbc:Percent"] = $percent;
 
             $details[] = $detail;
@@ -217,11 +217,11 @@ final class SummaryMapper
             throw InvalidInput::content($totals->pointer('igv'), 'inconsistent_amounts', 'No hay IGV sin operaciones gravadas.');
         }
 
-        $detail->setTotal((float) (string) $total)
-            ->setMtoOperGravadas($taxable->isZero() ? null : (float) (string) $taxable)
-            ->setMtoOperExoneradas($exempt->isZero() ? null : (float) (string) $exempt)
-            ->setMtoOperInafectas($unaffected->isZero() ? null : (float) (string) $unaffected)
-            ->setMtoIGV((float) (string) $igv);
+        $detail->setTotal($total->toFloat())
+            ->setMtoOperGravadas($taxable->isZero() ? null : $taxable->toFloat())
+            ->setMtoOperExoneradas($exempt->isZero() ? null : $exempt->toFloat())
+            ->setMtoOperInafectas($unaffected->isZero() ? null : $unaffected->toFloat())
+            ->setMtoIGV($igv->toFloat());
 
         $nodes = [
             'sac:TotalAmount' => $total,
