@@ -4,8 +4,15 @@ declare(strict_types=1);
 
 namespace See\Tests\Feature;
 
+use Brick\Math\BigDecimal;
 use Greenter\XMLSecLibs\Sunat\SignedXml;
+use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
+use See\Cpe\Certificate;
+use See\Cpe\DocumentMapper;
+use See\Cpe\Mapped;
+use See\Cpe\Signer;
+use See\Input\Input;
 use See\Support\Xml;
 use See\Tests\TestCase;
 
@@ -113,5 +120,27 @@ final class SignedDocumentTest extends TestCase
         $path = '/*/sac:SummaryDocumentsLine/cac:AccountingCustomerParty/cac:Party/cac:PartyLegalEntity/cbc:RegistrationName';
         self::assertSame('CLIENTES VARIOS', Xml::single($xpath, $path));
         self::assertSame(1.0, $xpath->evaluate('count('.$path.')'));
+    }
+
+    public function test_the_signer_refuses_xml_that_does_not_print_what_was_mapped(): void
+    {
+        $mapped = DocumentMapper::map(Input::fromJson(json_encode(self::example('document-01-cash'), JSON_THROW_ON_ERROR)));
+        $certificate = Certificate::fromPem(self::certificatePem(), self::now(), '/certificate');
+        $wrongLine = $mapped->lines;
+        $wrongLine[1]['cbc:LineExtensionAmount'] = BigDecimal::of('21.18');
+        $cases = [
+            'un monto de línea' => [$mapped->amounts, $wrongLine],
+            'una línea de más' => [$mapped->amounts, [...$mapped->lines, []]],
+            'un total' => [['/*/cac:LegalMonetaryTotal/cbc:PayableAmount' => BigDecimal::of('204.81')] + $mapped->amounts, $mapped->lines],
+        ];
+
+        foreach ($cases as $case => [$amounts, $lines]) {
+            try {
+                Signer::create(null)->sign(new Mapped($mapped->model, $mapped->filename, $amounts, $mapped->linePath, $lines), $certificate);
+                self::fail("Firmó con {$case} distinto del XML.");
+            } catch (LogicException $exception) {
+                self::assertStringStartsWith('Auditoría XML', $exception->getMessage());
+            }
+        }
     }
 }

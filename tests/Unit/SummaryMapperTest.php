@@ -20,7 +20,8 @@ final class SummaryMapperTest extends TestCase
 
         self::assertInstanceOf(Summary::class, $mapped->model);
         self::assertSame('20000000001-RC-20261022-1', $mapped->filename);
-        self::assertSame(['/*/sac:SummaryDocumentsLine' => 2], $mapped->counts);
+        self::assertSame('/*/sac:SummaryDocumentsLine', $mapped->linePath);
+        self::assertCount(2, $mapped->lines);
     }
 
     public function test_voided_communication_is_named_by_its_communication_day(): void

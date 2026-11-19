@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace See\Cpe;
 
 use Brick\Math\BigDecimal;
-use DOMDocument;
+use DOMNode;
+use DOMXPath;
 use Greenter\Builder\BuilderInterface;
 use Greenter\Model\Sale\Invoice;
 use Greenter\Model\Sale\Note;
@@ -57,9 +58,10 @@ final class Signer
             throw new LogicException('No se pudo serializar el XML firmado.');
         }
 
-        self::audit($document, $mapped);
+        $xpath = Xml::xpath($document);
+        self::audit($xpath, $mapped);
 
-        $digest = Xml::single(Xml::xpath($document), '//ds:SignedInfo/ds:Reference/ds:DigestValue')
+        $digest = Xml::single($xpath, '//ds:SignedInfo/ds:Reference/ds:DigestValue')
             ?? throw new LogicException('El XML firmado no tiene DigestValue.');
 
         return new SignedDocument($mapped->filename, $xml, hash('sha256', $xml), $digest);
@@ -94,24 +96,32 @@ final class Signer
         };
     }
 
-    /** Every amount and count the mapper declared must appear, exactly, in the signed XML. */
-    private static function audit(DOMDocument $document, Mapped $mapped): void
+    /** Every line and amount the mapper declared must appear, exactly, in the signed XML. */
+    private static function audit(DOMXPath $xpath, Mapped $mapped): void
     {
-        $xpath = Xml::xpath($document);
+        $lines = $xpath->query($mapped->linePath);
+        $found = $lines === false ? 0 : $lines->length;
 
-        foreach ($mapped->counts as $path => $expected) {
-            $actual = $xpath->evaluate("count({$path})");
-
-            if (! is_float($actual) || (int) $actual !== $expected) {
-                throw new LogicException("Auditoría XML: {$path} tiene ".var_export($actual, true)." nodos, se esperaban {$expected}.");
-            }
+        if ($lines === false || $found !== count($mapped->lines)) {
+            throw new LogicException("Auditoría XML: {$mapped->linePath} tiene {$found} nodos, se esperaban ".count($mapped->lines).'.');
         }
 
-        foreach ($mapped->amounts as $path => $expected) {
-            $actual = Xml::single($xpath, $path);
+        self::auditAmounts($xpath, $mapped->amounts, null, '');
+
+        foreach ($mapped->lines as $index => $amounts) {
+            $line = $lines->item($index);
+            self::auditAmounts($xpath, $amounts, $line instanceof DOMNode ? $line : null, $mapped->linePath.'['.($index + 1).']/');
+        }
+    }
+
+    /** @param array<string, BigDecimal> $amounts */
+    private static function auditAmounts(DOMXPath $xpath, array $amounts, ?DOMNode $context, string $label): void
+    {
+        foreach ($amounts as $path => $expected) {
+            $actual = Xml::single($xpath, $path, $context);
 
             if ($actual === null || ! self::sameAmount($actual, $expected)) {
-                throw new LogicException("Auditoría XML: {$path} = ".var_export($actual, true).", se esperaba {$expected}.");
+                throw new LogicException("Auditoría XML: {$label}{$path} = ".var_export($actual, true).", se esperaba {$expected}.");
             }
         }
     }

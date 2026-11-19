@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace See\Support;
 
 use DOMDocument;
+use DOMNode;
 use DOMXPath;
 
 /**
@@ -56,10 +57,10 @@ final class Xml
         return $xpath;
     }
 
-    /** Text of the single node at $path, or null when there is not exactly one. */
-    public static function single(DOMXPath $xpath, string $path): ?string
+    /** Text of the single node at $path (relative to $context, if given), or null when there is not exactly one. */
+    public static function single(DOMXPath $xpath, string $path, ?DOMNode $context = null): ?string
     {
-        $nodes = $xpath->query($path);
+        $nodes = $xpath->query($path, $context);
 
         if ($nodes === false || $nodes->length !== 1) {
             return null;

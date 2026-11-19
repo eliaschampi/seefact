@@ -52,8 +52,8 @@ final class DocumentMapper
     /** @var array<string, BigDecimal> */
     private array $amounts = [];
 
-    /** @var array<string, int> */
-    private array $counts = [];
+    /** @var list<array<string, BigDecimal>> */
+    private array $lineAmounts = [];
 
     private function __construct() {}
 
@@ -94,7 +94,7 @@ final class DocumentMapper
             ->setDetails($lines['details'])
             ->setLegends($this->legends($document));
 
-        return new Mapped($sale, $sale->getName(), $this->amounts, $this->counts);
+        return new Mapped($sale, $sale->getName(), $this->amounts, $isNote ? '/*/cac:CreditNoteLine' : '/*/cac:InvoiceLine', $this->lineAmounts);
     }
 
     private function invoice(Input $document, string $type, DateTimeImmutable $issuedAt): Invoice
@@ -136,14 +136,13 @@ final class DocumentMapper
      */
     private function lines(array $lines, bool $isNote): array
     {
-        $element = $isNote ? 'cac:CreditNoteLine' : 'cac:InvoiceLine';
         $quantityElement = $isNote ? 'cbc:CreditedQuantity' : 'cbc:InvoicedQuantity';
         $sums = ['taxed' => null, 'exempt' => null, 'unaffected' => null];
         $igvTotal = BigDecimal::zero();
         $saleValueTotal = BigDecimal::zero();
         $details = [];
 
-        foreach ($lines as $index => $line) {
+        foreach ($lines as $line) {
             $line->only('code', 'sunat_code', 'description', 'unit_code', 'quantity', 'unit_value', 'unit_price', 'sale_value', 'tax_affectation', 'igv_base', 'igv_percent', 'igv');
 
             $affectation = $line->oneOf('tax_affectation', [self::TAXED, self::EXEMPT, self::UNAFFECTED]);
@@ -195,17 +194,16 @@ final class DocumentMapper
                 ->setIgv(self::float($igv))
                 ->setTotalImpuestos(self::float($igv));
 
-            $path = '/*/'.$element.'['.($index + 1).']';
-            $this->amounts[$path.'/'.$quantityElement] = $quantity;
-            $this->amounts[$path.'/cbc:LineExtensionAmount'] = $saleValue;
-            $this->amounts[$path.'/cac:PricingReference/cac:AlternativeConditionPrice/cbc:PriceAmount'] = $unitPrice;
-            $this->amounts[$path.'/cac:TaxTotal/cbc:TaxAmount'] = $igv;
-            $this->amounts[$path.'/cac:TaxTotal/cac:TaxSubtotal/cbc:TaxableAmount'] = $igvBase;
-            $this->amounts[$path.'/cac:TaxTotal/cac:TaxSubtotal/cbc:TaxAmount'] = $igv;
-            $this->amounts[$path.'/cac:Price/cbc:PriceAmount'] = $unitValue;
+            $this->lineAmounts[] = [
+                $quantityElement => $quantity,
+                'cbc:LineExtensionAmount' => $saleValue,
+                'cac:PricingReference/cac:AlternativeConditionPrice/cbc:PriceAmount' => $unitPrice,
+                'cac:TaxTotal/cbc:TaxAmount' => $igv,
+                'cac:TaxTotal/cac:TaxSubtotal/cbc:TaxableAmount' => $igvBase,
+                'cac:TaxTotal/cac:TaxSubtotal/cbc:TaxAmount' => $igv,
+                'cac:Price/cbc:PriceAmount' => $unitValue,
+            ];
         }
-
-        $this->counts['/*/'.$element] = count($lines);
 
         return ['details' => $details, ...$sums, 'igv' => $igvTotal, 'sale_value' => $saleValueTotal];
     }

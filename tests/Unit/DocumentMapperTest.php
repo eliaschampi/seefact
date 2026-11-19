@@ -23,7 +23,8 @@ final class DocumentMapperTest extends TestCase
         self::assertSame('20000000001-01-F001-1', $mapped->filename);
         self::assertSame(204.80, $mapped->model->getMtoImpVenta());
         self::assertNull($mapped->model->getMtoOperExoneradas(), 'Sin líneas exoneradas no se declara el tributo.');
-        self::assertSame(['/*/cac:InvoiceLine' => 2], $mapped->counts);
+        self::assertSame('/*/cac:InvoiceLine', $mapped->linePath);
+        self::assertCount(2, $mapped->lines);
     }
 
     public function test_credit_terms_carry_the_pending_amount_and_installments(): void

@@ -33,6 +33,8 @@ final class SummaryMapper
 
     private const string RECEIPT_ID = 'B[A-Z0-9]{3}-[1-9]\d{0,7}';
 
+    private const string DAILY_LINE = '/*/sac:SummaryDocumentsLine';
+
     private const int MAX_LINES = 500;
 
     private function __construct() {}
@@ -50,7 +52,7 @@ final class SummaryMapper
         [$referenceDate, $issueDate] = self::dates($summary);
         $currency = $summary->oneOf('currency', ['PEN', 'USD']);
         $lines = $summary->objects('lines', 1, self::MAX_LINES);
-        $amounts = [];
+        $lineAmounts = [];
         $details = [];
         $customerNames = [];
 
@@ -62,7 +64,7 @@ final class SummaryMapper
             $customerName = $customer->optionalText('name', 250);
 
             if ($customerName !== null) {
-                $customerNames[$index + 1] = $customerName;
+                $customerNames[$index] = $customerName;
             }
 
             $detail = (new SummaryDetail)
@@ -73,19 +75,16 @@ final class SummaryMapper
                 ->setClienteNro($customerNumber)
                 ->setDocReferencia(self::reference($line, $type));
 
-            $path = '/*/sac:SummaryDocumentsLine['.($index + 1).']';
-
-            foreach (self::lineTotals($line->object('totals'), $detail) as $node => $amount) {
-                $amounts[$path.$node] = $amount;
-            }
+            $amounts = self::lineTotals($line->object('totals'), $detail);
 
             // SUNAT rejects a line without the IGV rate (2992), even when
             // the boleta has no taxed operations.
             $percent = $line->decimal('igv_percent', 2, 3);
             $detail->setPorcentajeIgv((float) (string) $percent);
-            $amounts[$path."/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory[cac:TaxScheme/cbc:ID='1000']/cbc:Percent"] = $percent;
+            $amounts["cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory[cac:TaxScheme/cbc:ID='1000']/cbc:Percent"] = $percent;
 
             $details[] = $detail;
+            $lineAmounts[] = $amounts;
         }
 
         $model = (new Summary)
@@ -96,14 +95,14 @@ final class SummaryMapper
             ->setCompany(Parties::summaryIssuer($summary->object('issuer')))
             ->setDetails($details);
 
-        return new Mapped($model, $model->getName(), $amounts, ['/*/sac:SummaryDocumentsLine' => count($lines)], $customerNames);
+        return new Mapped($model, $model->getName(), [], self::DAILY_LINE, $lineAmounts, $customerNames);
     }
 
     /**
      * RS 000048-2026 adds the buyer's name to RC. Greenter 5.3 cannot
      * render it; complete its DOM before signing, without a second template.
      *
-     * @param  array<int, string>  $names  one-based line position → name
+     * @param  array<int, string>  $names  line index → name
      */
     public static function addCustomerNames(DOMDocument $document, array $names): void
     {
@@ -112,9 +111,11 @@ final class SummaryMapper
         }
 
         $xpath = Xml::xpath($document);
+        $lines = $xpath->query(self::DAILY_LINE);
 
-        foreach ($names as $position => $name) {
-            $customers = $xpath->query("/*/sac:SummaryDocumentsLine[{$position}]/cac:AccountingCustomerParty");
+        foreach ($names as $index => $name) {
+            $line = $lines === false ? null : $lines->item($index);
+            $customers = $line instanceof DOMElement ? $xpath->query('cac:AccountingCustomerParty', $line) : false;
             $customer = $customers === false ? null : $customers->item(0);
 
             if ($customers === false || $customers->length !== 1 || ! $customer instanceof DOMElement) {
@@ -154,7 +155,7 @@ final class SummaryMapper
             ->setCompany(Parties::summaryIssuer($summary->object('issuer')))
             ->setDetails($details);
 
-        return new Mapped($model, $model->getName(), [], ['/*/sac:VoidedDocumentsLine' => count($lines)]);
+        return new Mapped($model, $model->getName(), [], '/*/sac:VoidedDocumentsLine', array_fill(0, count($lines), []));
     }
 
     /**
@@ -194,7 +195,7 @@ final class SummaryMapper
     }
 
     /**
-     * Sets the line amounts and returns the XML nodes that must carry them.
+     * Sets the line amounts and returns the XML nodes, relative to the line, that must carry them.
      *
      * @return array<string, BigDecimal>
      */
@@ -223,13 +224,13 @@ final class SummaryMapper
             ->setMtoIGV((float) (string) $igv);
 
         $nodes = [
-            '/sac:TotalAmount' => $total,
-            '/cac:TaxTotal[cac:TaxSubtotal/cac:TaxCategory/cac:TaxScheme/cbc:ID=\'1000\']/cbc:TaxAmount' => $igv,
+            'sac:TotalAmount' => $total,
+            'cac:TaxTotal[cac:TaxSubtotal/cac:TaxCategory/cac:TaxScheme/cbc:ID=\'1000\']/cbc:TaxAmount' => $igv,
         ];
 
         foreach (['01' => $taxable, '02' => $exempt, '03' => $unaffected] as $instruction => $amount) {
             if (! $amount->isZero()) {
-                $nodes["/sac:BillingPayment[cbc:InstructionID='{$instruction}']/cbc:PaidAmount"] = $amount;
+                $nodes["sac:BillingPayment[cbc:InstructionID='{$instruction}']/cbc:PaidAmount"] = $amount;
             }
         }
 
