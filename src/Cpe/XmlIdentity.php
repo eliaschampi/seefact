@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace See\Cpe;
 
+use DOMDocument;
 use Greenter\Ws\Reader\XmlFilenameExtractor;
 use Greenter\Ws\Reader\XmlReader;
 use Greenter\XMLSecLibs\Sunat\SignedXml;
@@ -51,7 +52,9 @@ final readonly class XmlIdentity
 
         // A byte changed after signing would reach SUNAT as a rejection
         // (2335) and burn the correlativo. Refuse it here instead.
-        if (! self::signatureVerifies($xml)) {
+        // Verifying detaches ds:Signature from $document; nothing read
+        // below lives there, and the bytes sent are $xml, untouched.
+        if (! self::signatureVerifies($document)) {
             throw InvalidInput::content($pointer, 'xml_signature_invalid', 'La firma no corresponde al contenido: el XML cambió después de firmarse.');
         }
 
@@ -68,10 +71,14 @@ final readonly class XmlIdentity
         return new self($filename, $match['ruc'], hash('sha256', $xml));
     }
 
-    private static function signatureVerifies(string $xml): bool
+    /** Greenter's verifyXml() would parse the bytes again with a bare loadXML(); this reuses the safe parse. */
+    private static function signatureVerifies(DOMDocument $document): bool
     {
         try {
-            return (new SignedXml)->verifyXml($xml) === true;
+            $verifier = new SignedXml;
+            $verifier->getPublicKey($document);
+
+            return $verifier->verify($document) === true;
         } catch (Throwable) {
             return false;
         }
