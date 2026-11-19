@@ -50,9 +50,7 @@ final class Console
     private static function diagnose(): int
     {
         $missing = array_values(array_filter(['dom', 'libxml', 'openssl', 'soap', 'zlib'], static fn (string $extension): bool => ! extension_loaded($extension)));
-        $cache = getenv('SEE_TWIG_CACHE');
-        $cacheDirectory = $cache === false ? dirname(__DIR__).'/var/cache/twig' : $cache;
-        $token = getenv('SEE_API_TOKEN');
+        $cacheDirectory = Kernel::twigCache();
         $ca = ini_get('openssl.cafile') ?: openssl_get_cert_locations()['default_cert_file'];
 
         self::line('see-php diagnose (sin red)');
@@ -60,7 +58,7 @@ final class Console
         self::row('Extensiones', $missing === [] ? 'dom libxml openssl soap zlib' : 'FALTAN: '.implode(' ', $missing));
         self::row('Greenter', (string) InstalledVersions::getPrettyVersion('greenter/lite'));
         self::row('Contrato', Kernel::CONTRACT);
-        self::row('Token', is_string($token) && strlen($token) >= 32 ? 'configurado' : 'AUSENTE: SEE_API_TOKEN, mínimo 32 caracteres');
+        self::row('Token', Kernel::token() !== null ? 'configurado' : 'AUSENTE: SEE_API_TOKEN, mínimo '.Kernel::MIN_TOKEN_LENGTH.' caracteres');
         self::row('Twig cache', $cacheDirectory === '' ? 'desactivado' : $cacheDirectory.(is_writable(is_dir($cacheDirectory) ? $cacheDirectory : dirname($cacheDirectory)) ? ' (escribible)' : ' (NO escribible)'));
         self::row('CA TLS', $ca);
         self::row('PFX legacy', Certificate::legacyProviderActive() ? 'activo (.pfx RC2-40)' : 'INACTIVO: OPENSSL_CONF=deploy/openssl.cnf; los .pfx RC2-40 no se leen');
@@ -86,7 +84,7 @@ final class Console
         $sol = new SolCredentials($ruc, 'MODDATOS', self::env('SEE_BETA_PASSWORD', 'MODDATOS'));
         $certificate = Certificate::fromPem(self::ephemeralPem($ruc), $now, '/certificate');
         $signer = Signer::create(null);
-        $sunat = SunatClient::soap(10, 45);
+        $sunat = Kernel::sunat();
         $number = random_int(1_000, 9_999_999);
 
         self::line('see-php smoke:beta → '.Environment::Beta->billService());

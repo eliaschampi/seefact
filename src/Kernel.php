@@ -45,7 +45,9 @@ final class Kernel
         '/v1/certificates/import' => 'POST',
     ];
 
-    private const int MIN_TOKEN_LENGTH = 32;
+    public const int MIN_TOKEN_LENGTH = 32;
+
+    private const int MAX_BODY_BYTES = 8_388_608;
 
     /**
      * @param  Closure(): DateTimeImmutable  $clock
@@ -57,24 +59,44 @@ final class Kernel
         private readonly SunatClient $sunat,
         private readonly Closure $clock,
         private readonly Closure $log,
-        private readonly int $maxBodyBytes = 8_388_608,
+        private readonly int $maxBodyBytes = self::MAX_BODY_BYTES,
     ) {}
 
+    /** The service as configured by the environment (README). bin/see reads the same settings. */
     public static function fromEnvironment(): self
     {
-        $token = getenv('SEE_API_TOKEN');
-        $cache = getenv('SEE_TWIG_CACHE');
-
         return new self(
-            is_string($token) && strlen($token) >= self::MIN_TOKEN_LENGTH ? $token : null,
-            Signer::create($cache === false ? dirname(__DIR__).'/var/cache/twig' : $cache),
-            SunatClient::soap(self::env('SEE_SOAP_CONNECT_TIMEOUT', 10, 1, 60), self::env('SEE_SOAP_TIMEOUT', 45, 5, 300)),
+            self::token(),
+            Signer::create(self::twigCache()),
+            self::sunat(),
             static fn (): DateTimeImmutable => new DateTimeImmutable,
             static function (string $line): void {
                 error_log($line);
             },
-            self::env('SEE_MAX_BODY_BYTES', 8_388_608, 65_536, 67_108_864),
+            self::env('SEE_MAX_BODY_BYTES', self::MAX_BODY_BYTES, 65_536, 67_108_864),
         );
+    }
+
+    /** SEE_API_TOKEN, or null when it is missing or shorter than MIN_TOKEN_LENGTH. */
+    public static function token(): ?string
+    {
+        $token = getenv('SEE_API_TOKEN');
+
+        return is_string($token) && strlen($token) >= self::MIN_TOKEN_LENGTH ? $token : null;
+    }
+
+    /** SEE_TWIG_CACHE, var/cache/twig by default; empty disables the cache. */
+    public static function twigCache(): string
+    {
+        $cache = getenv('SEE_TWIG_CACHE');
+
+        return $cache === false ? dirname(__DIR__).'/var/cache/twig' : $cache;
+    }
+
+    /** SUNAT's transport with SEE_SOAP_CONNECT_TIMEOUT and SEE_SOAP_TIMEOUT. */
+    public static function sunat(): SunatClient
+    {
+        return SunatClient::soap(self::env('SEE_SOAP_CONNECT_TIMEOUT', 10, 1, 60), self::env('SEE_SOAP_TIMEOUT', 45, 5, 300));
     }
 
     public function handle(Request $request): Response
