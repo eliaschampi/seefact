@@ -9,6 +9,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use See\Cpe\Certificate;
 use See\Cpe\DocumentMapper;
+use See\Cpe\Mapped;
 use See\Cpe\Parties;
 use See\Cpe\Signer;
 use See\Cpe\SummaryMapper;
@@ -18,6 +19,7 @@ use See\Http\Response;
 use See\Input\Input;
 use See\Input\InvalidInput;
 use See\Sunat\Environment;
+use See\Sunat\Reply;
 use See\Sunat\SolCredentials;
 use See\Sunat\SunatClient;
 use SensitiveParameter;
@@ -172,32 +174,27 @@ final class Kernel
         $input = Input::fromJson($request->body);
 
         return new Response(200, match ($request->path) {
-            '/v1/documents/sign' => $this->signDocument($input),
-            '/v1/documents/send' => $this->sendDocument($input),
-            '/v1/summaries/sign' => $this->signSummary($input),
-            '/v1/summaries/send' => $this->sendSummary($input),
+            '/v1/documents/sign' => $this->sign($input, 'document', DocumentMapper::map(...)),
+            '/v1/documents/send' => $this->send($input, XmlIdentity::DOCUMENTS, $this->sunat->sendBill(...)),
+            '/v1/summaries/sign' => $this->sign($input, 'summary', SummaryMapper::map(...)),
+            '/v1/summaries/send' => $this->send($input, XmlIdentity::SUMMARIES, $this->sunat->sendSummary(...)),
             '/v1/tickets/status' => $this->ticketStatus($input),
             '/v1/certificates/import' => $this->importCertificate($input),
             default => $this->cdrStatus($input),
         });
     }
 
-    /** @return array<string, mixed> */
-    private function signDocument(Input $input): array
+    /**
+     * @param  Closure(Input): Mapped  $map  cpe.v1 or summary.v1 under $key
+     * @return array<string, mixed>
+     */
+    private function sign(Input $input, string $key, Closure $map): array
     {
-        $input->only('certificate', 'document');
-        $mapped = DocumentMapper::map($input->object('document'));
+        $input->only('certificate', $key);
+        $mapped = $map($input->object($key));
+        $certificate = Certificate::fromPem($input->secret('certificate', 65_536), ($this->clock)(), $input->pointer('certificate'));
 
-        return $this->signer->sign($mapped, $this->certificate($input))->toArray();
-    }
-
-    /** @return array<string, mixed> */
-    private function signSummary(Input $input): array
-    {
-        $input->only('certificate', 'summary');
-        $mapped = SummaryMapper::map($input->object('summary'));
-
-        return $this->signer->sign($mapped, $this->certificate($input))->toArray();
+        return $this->signer->sign($mapped, $certificate)->toArray();
     }
 
     /**
@@ -223,24 +220,6 @@ final class Kernel
             'not_after' => $certificate->validTo->setTimezone(new DateTimeZone(Input::LIMA))->format(DATE_RFC3339),
             'sha256' => $certificate->sha256,
         ];
-    }
-
-    /** @return array<string, mixed> */
-    private function sendDocument(Input $input): array
-    {
-        [$environment, $sol, $xml, $identity] = $this->outgoing($input, XmlIdentity::DOCUMENTS);
-        $reply = $this->sunat->sendBill($environment, $sol, $identity->filename, $xml);
-
-        return [...$reply->toArray(), 'filename' => $identity->filename, 'xml_sha256' => $identity->sha256];
-    }
-
-    /** @return array<string, mixed> */
-    private function sendSummary(Input $input): array
-    {
-        [$environment, $sol, $xml, $identity] = $this->outgoing($input, XmlIdentity::SUMMARIES);
-        $reply = $this->sunat->sendSummary($environment, $sol, $identity->filename, $xml);
-
-        return [...$reply->toArray(), 'filename' => $identity->filename, 'xml_sha256' => $identity->sha256];
     }
 
     /** @return array<string, mixed> */
@@ -279,13 +258,14 @@ final class Kernel
     }
 
     /**
-     * What every send shares: where, who, and the exact signed bytes, whose
-     * SUNAT name is read from the XML itself.
+     * The exact signed bytes, under the SUNAT name read from the XML itself,
+     * and only with the Clave SOL of the XML's issuer.
      *
      * @param  list<string>  $roots
-     * @return array{Environment, SolCredentials, string, XmlIdentity}
+     * @param  Closure(Environment, SolCredentials, string, string): Reply  $transport  environment, credentials, filename, XML
+     * @return array<string, mixed>
      */
-    private function outgoing(Input $input, array $roots): array
+    private function send(Input $input, array $roots, Closure $transport): array
     {
         $input->only('environment', 'sol', 'xml_base64');
         $environment = self::environment($input);
@@ -297,12 +277,7 @@ final class Kernel
             throw InvalidInput::content($input->pointer('sol').'/ruc', 'sol_ruc_mismatch', 'La Clave SOL no pertenece al emisor del XML.');
         }
 
-        return [$environment, $sol, $xml, $identity];
-    }
-
-    private function certificate(Input $input): Certificate
-    {
-        return Certificate::fromPem($input->secret('certificate', 65_536), ($this->clock)(), $input->pointer('certificate'));
+        return [...$transport($environment, $sol, $identity->filename, $xml)->toArray(), 'filename' => $identity->filename, 'xml_sha256' => $identity->sha256];
     }
 
     private static function environment(Input $input): Environment
