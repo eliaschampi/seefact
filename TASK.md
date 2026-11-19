@@ -7,7 +7,7 @@ hay red) no cuenta como hecho. Ley: `docs/SPEC.md`. Hechos: `docs/STATUS.md`.
 | -------------------- | ------------------------------------------------ |
 | Fase                 | **Fase 1 cerrada** (plan V2)                     |
 | Siguiente            | Fase 2: base del core (repo Rust, no este)       |
-| Última actualización | 2026-10-22                                       |
+| Última actualización | 2026-11-19                                       |
 
 ## Fase 1 — motor SEE (cerrada)
 
@@ -30,6 +30,7 @@ RA y consulta de CDR.
 | ----------------------- | -------------------------------------------------------------------------------------------------------- |
 | ~~`.pfx` → PEM~~        | Hecho 2026-10-29: `/v1/certificates/import`, `deploy/openssl.cnf` (provider `legacy`), probado con un `.pfx` moderno y uno RC2-40 hechos del certificado de prueba. Falta abrir uno real de una CA peruana (con el primer emisor). |
 | ~~Nombre del adquirente en RC~~ | Hecho 2026-11-02, necesario para core F10: `customer.name` → `RegistrationName` antes de firmar (RS 000048-2026, anexos VII/X); golden revisado, 73 tests / 450 aserciones. XML nuevo contra SUNAT: sin verificar. |
+| ~~Auditoría del motor~~ | Hecha 2026-11-18/19: U+FFFE/U+FFFF → 400 en su campo; auditoría por línea (lineal); `/send` parsea una vez; `Kernel` dueño único de la configuración de entorno; un `sign` y un `send`; `toFloat()`; `smoke:beta` vuelve a correr. Goldens idénticos, 76 tests / 460 aserciones; cifras y beta en `STATUS.md`. |
 | Endpoint por emisor     | OSE para PRICOS ≥ 300 UIT (v1.x): `target{ose_url}` validado.                                            |
 | GRE remitente `09`      | Fase 6: REST + OAuth; el token lo guarda el core y viaja por request.                                    |
 | Smoke de producción     | Fase 3: con emisor de tercera categoría real, fuera de CI.                                               |

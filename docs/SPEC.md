@@ -99,6 +99,7 @@ tests/Golden/         XML firmado byte a byte de cada ejemplo
 | `getErrorFromFault` toma dígitos de cualquier texto                 | regla 4                                                       |
 | `ExtService`/`ConsultCdrService` hacen `(int)` del código           | códigos como texto                                            |
 | `BillSender` convierte un CDR vacío en un `Error` genérico          | `invalid_response` con los bytes como evidencia               |
+| `SignedXml::verifyXml` vuelve a parsear con un `loadXML` sin guardas | `XmlIdentity` verifica el DOM que ya cargó `Xml::load`        |
 | plantillas con `autoescape` apagado                                 | `Input` + `Xml::escape` según el contexto                     |
 | modelos con `float`; la impresión depende de `precision`            | dígitos acotados + `precision=-1` local + auditoría           |
 | la plantilla de NC no imprime `LineExtensionAmount`                 | la auditoría exige sólo lo que se imprime                     |
