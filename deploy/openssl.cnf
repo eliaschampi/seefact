@@ -19,3 +19,11 @@ activate = 1
 
 [legacy_sect]
 activate = 1
+
+# openssl_csr_new() (the ephemeral certificate of `bin/see smoke:beta`) fails
+# with "no value" unless the file that replaces the system one names a DN
+# section. The subject itself comes from the code.
+[req]
+distinguished_name = req_distinguished_name
+
+[req_distinguished_name]

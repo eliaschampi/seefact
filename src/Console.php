@@ -79,10 +79,12 @@ final class Console
      */
     private static function smokeBeta(): int
     {
-        $now = new DateTimeImmutable('now', new DateTimeZone(Input::LIMA));
         $ruc = self::env('SEE_BETA_RUC', '20000000001');
+        $pem = self::ephemeralPem($ruc);
+        // Read the clock once the certificate exists: it is valid from that second on.
+        $now = new DateTimeImmutable('now', new DateTimeZone(Input::LIMA));
         $sol = new SolCredentials($ruc, 'MODDATOS', self::env('SEE_BETA_PASSWORD', 'MODDATOS'));
-        $certificate = Certificate::fromPem(self::ephemeralPem($ruc), $now, '/certificate');
+        $certificate = Certificate::fromPem($pem, $now, '/certificate');
         $signer = Signer::create(null);
         $sunat = Kernel::sunat();
         $number = random_int(1_000, 9_999_999);
