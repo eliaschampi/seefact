@@ -151,7 +151,8 @@ final class Input
      * Human text that ends up inside the signed XML.
      *
      * Control characters are refused (line breaks only where the field
-     * allows them), and so is "]]>": Greenter wraps names and descriptions in
+     * allows them), and so are U+FFFE and U+FFFF, which JSON carries but XML
+     * 1.0 does not. So is "]]>": Greenter wraps names and descriptions in
      * CDATA, and that sequence would let text inject markup into a CPE.
      */
     public function text(string $key, int $maxLength, bool $multiline = false): string
@@ -167,10 +168,10 @@ final class Input
             throw InvalidInput::shape($pointer, "Supera {$maxLength} caracteres.");
         }
 
-        $controls = $multiline ? '/[\x00-\x09\x0B-\x1F\x7F]/' : '/[\x00-\x1F\x7F]/';
+        $refused = $multiline ? '/[\x00-\x09\x0B-\x1F\x7F\x{FFFE}\x{FFFF}]/u' : '/[\x00-\x1F\x7F\x{FFFE}\x{FFFF}]/u';
 
-        if (preg_match($controls, $value) === 1) {
-            throw InvalidInput::shape($pointer, 'Contiene caracteres de control.');
+        if (preg_match($refused, $value) === 1) {
+            throw InvalidInput::shape($pointer, 'Contiene caracteres de control o que XML no admite.');
         }
 
         if (str_contains($value, ']]>')) {

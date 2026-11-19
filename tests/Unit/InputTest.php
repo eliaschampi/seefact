@@ -58,6 +58,9 @@ final class InputTest extends TestCase
     {
         yield 'cdata terminator' => ['abc]]><cbc:Note>x</cbc:Note>'];
         yield 'control character' => ["abc\x07"];
+        // Valid JSON and UTF-8, but not XML 1.0 characters: libxml refuses the document.
+        yield 'noncharacter U+FFFE' => ["abc\u{FFFE}"];
+        yield 'noncharacter U+FFFF' => ["abc\u{FFFF}"];
         yield 'blank' => ['   '];
         yield 'line break in single-line field' => ["dos\nlíneas"];
     }

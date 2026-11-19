@@ -58,8 +58,10 @@ Reglas:
 7. **Dinero como texto decimal**, con ≤ 15 dígitos significativos (exacto
    en un double). Además, el XML renderizado se audita nodo por nodo contra
    lo que declaró el mapper.
-8. **El texto se protege según el contexto XML donde cae.** Dentro de CDATA
-   se rechazan `]]>` y los caracteres de control. Fuera de CDATA se escapa.
+8. **El texto se protege según el contexto XML donde cae.** Todo texto
+   rechaza los caracteres de control y los que XML 1.0 no admite (U+FFFE,
+   U+FFFF): un 400 en su campo, no un 500 al renderizar. Dentro de CDATA se
+   rechaza además `]]>`. Fuera de CDATA se escapa.
 
 ## 3. Stack y forma
 
